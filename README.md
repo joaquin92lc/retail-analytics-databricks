@@ -62,6 +62,12 @@ ML Monitoring
     └──────────────→ Alerts
 ```
 
+### Architecture in Databricks
+
+The platform is implemented as an end-to-end Medallion workflow, integrating Data Engineering, Analytics and Machine Learning.
+
+![Medallion Architecture](assets/screenshots/01_medallion_architecture.png)
+
 ## 4. Data Engineering
 
 ### Landing
@@ -91,6 +97,12 @@ The fact-table grain is a sales line identified by `sale_id + line_id`.
 
 Gold is consumed through Databricks SQL views and dashboards for sales trends, product/store performance, regional analysis, gross/net sales, tickets, units, average ticket, discounts and identified vs anonymous customers.
 
+### Executive Dashboard
+
+The Gold analytical layer feeds an executive dashboard covering business KPIs, sales trends and product/store performance.
+
+![Executive Dashboard](assets/screenshots/07_executive_dashboard.png)
+
 ## 6. Machine Learning
 
 The ML use case forecasts **daily net sales at store level**.
@@ -112,6 +124,12 @@ Features are built using information available before the prediction date to avo
 Random Forest regression configurations are trained and compared. Model selection considers predictive performance and unnecessary complexity.
 
 MLflow and Unity Catalog provide experiment tracking, metrics, parameters, model artifacts, registration, versioning and inference traceability.
+
+### MLflow Experiment Tracking
+
+Model configurations are tracked and compared through MLflow using validation and test metrics, parameters and registered model versions.
+
+![MLflow Experiment Tracking](assets/screenshots/08_mlflow_experiment.png)
 
 ## 7. Forecast Inference
 
@@ -173,6 +191,12 @@ ml_monitoring
 
 The complete end-to-end Job has been executed successfully.
 
+### End-to-End Execution
+
+The production-style workflow orchestrates Data Engineering, Analytics, Feature Engineering, Forecast Inference and ML Monitoring as a single dependency graph.
+
+![End-to-End Lakeflow Job](assets/screenshots/10_end_to_end_job.png)
+
 ## 11. Monitoring Dashboard
 
 ### ML Monitoring Overview
@@ -190,6 +214,12 @@ Operational analysis:
 - Predicted vs Actual Sales by Store
 - Absolute Error by Store
 - Forecast Monitoring details
+
+ ### Monitoring Analysis
+
+The monitoring dashboard provides operational visibility into forecast performance and feature drift, including PSI-based drift detection and store-level prediction errors.
+
+![ML Monitoring](assets/screenshots/09_ml_monitoring.png)
 
 ## 12. Project Status
 
@@ -213,7 +243,7 @@ Operational analysis:
 
 The next step is to move from a workspace-based implementation toward reproducible deployment and version control with:
 
-**Git + Databricks Asset Bundles + CI/CD**
+**Databricks Asset Bundles + CI/CD + multi-environment deployment (DEV/PROD)**
 
 ## Documentation
 
