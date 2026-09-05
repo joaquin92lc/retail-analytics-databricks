@@ -1,0 +1,58 @@
+# Databricks / local development
+.databricks/
+.bundle/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / editors
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Secrets / credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+secrets*
+
+# Local data / exports
+data/
+downloads/
+exports/
+
+# Spark / Databricks local artifacts
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
