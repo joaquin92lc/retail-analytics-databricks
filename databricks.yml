@@ -1,0 +1,18 @@
+bundle:
+  name: retail-analytics-databricks
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-2d40e698-7bc2.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-2d40e698-7bc2.cloud.databricks.com
+
