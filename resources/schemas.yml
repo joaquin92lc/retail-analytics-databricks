@@ -1,0 +1,22 @@
+resources:
+  schemas:
+
+    bronze_schema:
+      name: 1_bronze
+      catalog_name: ${var.catalog}
+      comment: Bronze layer for raw and incremental ingestion
+
+    silver_schema:
+      name: 2_silver
+      catalog_name: ${var.catalog}
+      comment: Silver layer for validated and standardized data
+
+    gold_schema:
+      name: 3_gold
+      catalog_name: ${var.catalog}
+      comment: Gold layer for dimensional modeling and analytics
+
+    ml_schema:
+      name: 5_ml
+      catalog_name: ${var.catalog}
+      comment: Machine Learning layer for features, predictions and monitoring

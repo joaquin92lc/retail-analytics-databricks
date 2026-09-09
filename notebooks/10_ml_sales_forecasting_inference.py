@@ -28,6 +28,16 @@
 
 # COMMAND ----------
 
+# Catálogo recibido desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
+
+dbutils.widgets.text("catalog", "retail_analytics")
+CATALOG = dbutils.widgets.get("catalog")
+
+print(f"Environment catalog: {CATALOG}")
+
+
 # DBTITLE 1,00.01 CONFIGURACIÓN DEL PROCESO DE INFERENCE
 # ============================================================
 # 00.01 CONFIGURACIÓN DEL PROCESO DE INFERENCE
@@ -473,7 +483,7 @@ from pyspark.sql.types import (
 # ============================================================
 
 FEATURE_TABLE = (
-    "retail_analytics.5_ml.daily_store_features"
+    f"{CATALOG}.5_ml.daily_store_features"
 )
 
 
@@ -3459,7 +3469,7 @@ from pyspark.sql import functions as F
 # ============================================================
 
 FORECAST_TABLE = (
-    "retail_analytics.5_ml.sales_forecast_predictions"
+    f"{CATALOG}.5_ml.sales_forecast_predictions"
 )
 
 
@@ -4214,7 +4224,7 @@ from pyspark.sql import functions as F
 # ============================================================
 
 FORECAST_TABLE = (
-    "retail_analytics.5_ml.sales_forecast_predictions"
+    f"{CATALOG}.5_ml.sales_forecast_predictions"
 )
 
 

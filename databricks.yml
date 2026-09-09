@@ -4,15 +4,32 @@ bundle:
 include:
   - resources/*.yml
 
+experimental:
+  skip_name_prefix_for_schema: true
+
+variables:
+  catalog:
+    description: Unity Catalog catalog used by the environment
+    default: retail_analytics_dev
+
 targets:
   dev:
     mode: development
     default: true
+
+    variables:
+      catalog: retail_analytics_dev
+
     workspace:
       host: https://dbc-2d40e698-7bc2.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/dev
 
   prod:
     mode: production
+
+    variables:
+      catalog: retail_analytics
+
     workspace:
       host: https://dbc-2d40e698-7bc2.cloud.databricks.com
-
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/prod

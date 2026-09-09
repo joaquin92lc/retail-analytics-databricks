@@ -3,7 +3,14 @@
 # MAGIC # **Bronze realizando profiling y validaciones de Data Quality**
 
 # COMMAND ----------
+# Catálogo recibido desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
 
+dbutils.widgets.text("catalog", "retail_analytics")
+CATALOG = dbutils.widgets.get("catalog")
+
+print(f"Environment catalog: {CATALOG}")
 # DBTITLE 1,00. CONFIGURACIÓN Y LECTURA DE TABLAS BRONZE
 # ============================================================
 # 01. CONFIGURACIÓN Y LECTURA DE TABLAS BRONZE
@@ -29,10 +36,10 @@
 # ------------------------------------------------------------
 
 bronze_tables = {
-    "sales": "retail_analytics.1_bronze.sales",
-    "customers": "retail_analytics.1_bronze.customers",
-    "products": "retail_analytics.1_bronze.products",
-    "stores": "retail_analytics.1_bronze.stores"
+    "sales": f"{CATALOG}.1_bronze.sales",
+    "customers": f"{CATALOG}.1_bronze.customers",
+    "products": f"{CATALOG}.1_bronze.products",
+    "stores": f"{CATALOG}.1_bronze.stores"
 }
 
 
@@ -116,9 +123,9 @@ sales_bronze_df.printSchema()
 # ------------------------------------------------------------
 
 display(
-    spark.sql("""
+    spark.sql(f"""
         DESCRIBE TABLE
-        retail_analytics.`1_bronze`.sales
+        {CATALOG}.`1_bronze`.sales
     """)
 )
 
@@ -901,16 +908,16 @@ technical_columns_to_drop = [
 
 silver_tables = {
     "sales":
-        "retail_analytics.2_silver.sales",
+        f"{CATALOG}.2_silver.sales",
 
     "customers":
-        "retail_analytics.2_silver.customers",
+        f"{CATALOG}.2_silver.customers",
 
     "products":
-        "retail_analytics.2_silver.products",
+        f"{CATALOG}.2_silver.products",
 
     "stores":
-        "retail_analytics.2_silver.stores"
+        f"{CATALOG}.2_silver.stores"
 }
 
 
@@ -1254,7 +1261,7 @@ for rule, errors in customer_validation_results.items():
 # ------------------------------------------------------------
 
 customers_silver_table = (
-    "retail_analytics.2_silver.customers"
+    f"{CATALOG}.2_silver.customers"
 )
 
 
@@ -1297,9 +1304,9 @@ customers_silver_table = (
 # 08.05 VALIDACIÓN DE CUSTOMERS SILVER MATERIALIZADA
 # ============================================================
 
-customers_silver_table_count = spark.sql("""
+customers_silver_table_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`2_silver`.customers
+    FROM {CATALOG}.`2_silver`.customers
 """).collect()[0][0]
 
 
@@ -1642,7 +1649,7 @@ for rule, errors in product_validation_results.items():
 # ------------------------------------------------------------
 
 products_silver_table = (
-    "retail_analytics.2_silver.products"
+    f"{CATALOG}.2_silver.products"
 )
 
 
@@ -1682,9 +1689,9 @@ products_silver_table = (
 # 09.05 VALIDACIÓN DE PRODUCTS SILVER MATERIALIZADA
 # ============================================================
 
-products_silver_table_count = spark.sql("""
+products_silver_table_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`2_silver`.products
+    FROM {CATALOG}.`2_silver`.products
 """).collect()[0][0]
 
 
@@ -2004,7 +2011,7 @@ for rule, errors in store_validation_results.items():
 # ------------------------------------------------------------
 
 stores_silver_table = (
-    "retail_analytics.2_silver.stores"
+    f"{CATALOG}.2_silver.stores"
 )
 
 
@@ -2044,9 +2051,9 @@ stores_silver_table = (
 # 10.04 VALIDACIÓN DE STORES SILVER MATERIALIZADA
 # ============================================================
 
-stores_silver_table_count = spark.sql("""
+stores_silver_table_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`2_silver`.stores
+    FROM {CATALOG}.`2_silver`.stores
 """).collect()[0][0]
 
 
@@ -2104,7 +2111,7 @@ from pyspark.sql import functions as F
 # ------------------------------------------------------------
 
 sales_silver_table = (
-    "retail_analytics.2_silver.sales"
+    f"{CATALOG}.2_silver.sales"
 )
 
 
@@ -3251,7 +3258,31 @@ for rule, errors in sales_validation_results.items():
     )
 
 # COMMAND ----------
+# ============================================================
+# DEDUPLICACIÓN SALES SILVER
+# ============================================================
+#
+# Silver debe contener una única fila por:
+#
+#       sale_id + line_id
+#
+# Bronze conserva fielmente la fuente, incluidos posibles
+# duplicados. Silver aplica la regla de unicidad.
+#
 
+sales_silver_df = (
+    sales_silver_df
+    .dropDuplicates(
+        ["sale_id", "line_id"]
+    )
+)
+
+print(
+    "Registros SALES Silver tras deduplicación:",
+    sales_silver_df.count()
+)
+
+# COMMAND ----------
 # DBTITLE 1,11.04 ESCRITURA INCREMENTAL DE SALES EN SILVER
 # ============================================================
 # 11.04 ESCRITURA INCREMENTAL DE SALES EN SILVER
@@ -3306,7 +3337,7 @@ from pyspark.sql import functions as F
 # ============================================================
 
 sales_silver_table = (
-    "retail_analytics.2_silver.sales"
+    f"{CATALOG}.2_silver.sales"
 )
 
 
@@ -3585,9 +3616,9 @@ print("-" * 75)
 #
 # Esto confirma que la escritura física se realizó correctamente.
 
-sales_silver_table_count = spark.sql("""
+sales_silver_table_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`2_silver`.sales
+    FROM {CATALOG}.`2_silver`.sales
 """).collect()[0][0]
 
 
@@ -3644,28 +3675,28 @@ from pyspark.sql import functions as F
 tables_to_validate = {
 
     "customers": {
-        "bronze": "retail_analytics.1_bronze.customers",
-        "silver": "retail_analytics.2_silver.customers"
+        "bronze": f"{CATALOG}.1_bronze.customers",
+        "silver": f"{CATALOG}.2_silver.customers"
     },
 
     "products": {
-        "bronze": "retail_analytics.1_bronze.products",
-        "silver": "retail_analytics.2_silver.products"
+        "bronze": f"{CATALOG}.1_bronze.products",
+        "silver": f"{CATALOG}.2_silver.products"
     },
 
     "stores": {
-        "bronze": "retail_analytics.1_bronze.stores",
-        "silver": "retail_analytics.2_silver.stores"
+        "bronze": f"{CATALOG}.1_bronze.stores",
+        "silver": f"{CATALOG}.2_silver.stores"
     }
 }
 
 
 sales_bronze_table = (
-    "retail_analytics.1_bronze.sales"
+    f"{CATALOG}.1_bronze.sales"
 )
 
 sales_silver_table = (
-    "retail_analytics.2_silver.sales"
+    f"{CATALOG}.2_silver.sales"
 )
 
 

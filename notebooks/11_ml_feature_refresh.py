@@ -19,6 +19,14 @@
 # MAGIC El notebook debe poder ejecutarse desde una sesión limpia y desde Lakeflow Jobs sin depender de variables creadas manualmente en otros notebooks.
 
 # COMMAND ----------
+# Catálogo recibido desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
+
+dbutils.widgets.text("catalog", "retail_analytics")
+CATALOG = dbutils.widgets.get("catalog")
+
+print(f"Environment catalog: {CATALOG}")
 
 # DBTITLE 1,00.01 CONFIGURACIÓN Y LECTURA DE GOLD
 # ============================================================
@@ -45,24 +53,19 @@ from pyspark.sql import functions as F
 # ============================================================
 
 FACT_SALES_TABLE = (
-    "retail_analytics.3_gold.fact_sales"
+    f"{CATALOG}.3_gold.fact_sales"
 )
 
 DIM_DATE_TABLE = (
-    "retail_analytics.3_gold.dim_date"
+    f"{CATALOG}.3_gold.dim_date"
 )
 
 DIM_STORE_TABLE = (
-    "retail_analytics.3_gold.dim_store"
+    f"{CATALOG}.3_gold.dim_store"
 )
 
-
-# ============================================================
-# 00.01.02 TABLA DESTINO
-# ============================================================
-
 FEATURE_TABLE = (
-    "retail_analytics.5_ml.daily_store_features"
+    f"{CATALOG}.5_ml.daily_store_features"
 )
 
 
