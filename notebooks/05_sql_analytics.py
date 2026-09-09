@@ -1,4 +1,20 @@
 # Databricks notebook source
+# COMMAND ----------
+
+# Catálogo recibido desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
+
+dbutils.widgets.text("catalog", "retail_analytics")
+CATALOG = dbutils.widgets.get("catalog")
+
+spark.sql(f"USE CATALOG `{CATALOG}`")
+spark.sql("USE SCHEMA `3_gold`")
+
+print(f"Environment catalog: {CATALOG}")
+print("Environment schema: 3_gold")
+
+# COMMAND ----------
 # DBTITLE 1,00. CONFIGURACIÓN Y VALIDACIÓN DE LA CAPA GOLD
 # MAGIC %sql
 # MAGIC -- ============================================================
@@ -38,7 +54,6 @@
 # MAGIC -- SELECCIONAMOS EL CATÁLOGO Y SCHEMA GOLD
 # MAGIC -- ------------------------------------------------------------
 # MAGIC
-# MAGIC USE CATALOG retail_analytics;
 # MAGIC
 # MAGIC USE SCHEMA `3_gold`;
 # MAGIC
@@ -141,7 +156,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_sales_daily
+# MAGIC     vw_sales_daily
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -336,7 +351,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.dim_date d
+# MAGIC     dim_date d
 # MAGIC
 # MAGIC
 # MAGIC -- ============================================================
@@ -344,7 +359,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC LEFT JOIN
-# MAGIC     retail_analytics.`3_gold`.fact_sales f
+# MAGIC     fact_sales f
 # MAGIC
 # MAGIC     ON d.date_key = f.date_key
 # MAGIC
@@ -388,7 +403,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_sales_daily
+# MAGIC FROM vw_sales_daily
 # MAGIC ORDER BY date
 # MAGIC LIMIT 20;
 
@@ -439,7 +454,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_sales_monthly
+# MAGIC     vw_sales_monthly
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -565,7 +580,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.fact_sales f
+# MAGIC     fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC -- ============================================================
@@ -573,7 +588,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC INNER JOIN
-# MAGIC     retail_analytics.`3_gold`.dim_date d
+# MAGIC     dim_date d
 # MAGIC
 # MAGIC     ON f.date_key = d.date_key
 # MAGIC
@@ -605,7 +620,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_sales_monthly
+# MAGIC FROM vw_sales_monthly
 # MAGIC ORDER BY year, month;
 
 # COMMAND ----------
@@ -672,7 +687,7 @@
 # MAGIC
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_sales_monthly
+# MAGIC         vw_sales_monthly
 # MAGIC
 # MAGIC )
 # MAGIC
@@ -813,7 +828,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_product_performance
+# MAGIC     vw_product_performance
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -918,7 +933,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.fact_sales f
+# MAGIC     fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC -- ============================================================
@@ -926,7 +941,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC INNER JOIN
-# MAGIC     retail_analytics.`3_gold`.dim_product p
+# MAGIC     dim_product p
 # MAGIC
 # MAGIC     ON f.product_id = p.product_id
 # MAGIC
@@ -967,7 +982,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_product_performance
+# MAGIC FROM vw_product_performance
 # MAGIC ORDER BY sales_rank
 # MAGIC LIMIT 20;
 
@@ -1040,7 +1055,7 @@
 # MAGIC
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.vw_product_performance
+# MAGIC     vw_product_performance
 # MAGIC
 # MAGIC
 # MAGIC ORDER BY
@@ -1083,7 +1098,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_store_performance
+# MAGIC     vw_store_performance
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -1210,7 +1225,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.fact_sales f
+# MAGIC     fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC -- ============================================================
@@ -1218,7 +1233,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC INNER JOIN
-# MAGIC     retail_analytics.`3_gold`.dim_store s
+# MAGIC     dim_store s
 # MAGIC
 # MAGIC     ON f.store_id = s.store_id
 # MAGIC
@@ -1255,7 +1270,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_store_performance
+# MAGIC FROM vw_store_performance
 # MAGIC ORDER BY sales_rank;
 
 # COMMAND ----------
@@ -1357,7 +1372,7 @@
 # MAGIC     -- ========================================================
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.fact_sales f
+# MAGIC         fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC     -- ========================================================
@@ -1365,7 +1380,7 @@
 # MAGIC     -- ========================================================
 # MAGIC
 # MAGIC     INNER JOIN
-# MAGIC         retail_analytics.`3_gold`.dim_store s
+# MAGIC         dim_store s
 # MAGIC
 # MAGIC         ON f.store_id = s.store_id
 # MAGIC
@@ -1484,7 +1499,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_customer_analysis
+# MAGIC     vw_customer_analysis
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -1610,7 +1625,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.fact_sales f
+# MAGIC     fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC -- ============================================================
@@ -1623,7 +1638,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC INNER JOIN
-# MAGIC     retail_analytics.`3_gold`.dim_customer c
+# MAGIC     dim_customer c
 # MAGIC
 # MAGIC     ON f.customer_id = c.customer_id
 # MAGIC
@@ -1660,7 +1675,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_customer_analysis
+# MAGIC FROM vw_customer_analysis
 # MAGIC ORDER BY customer_sales_rank
 # MAGIC LIMIT 20;
 
@@ -1763,7 +1778,7 @@
 # MAGIC     -- ========================================================
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.fact_sales f
+# MAGIC         fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC     -- ========================================================
@@ -1771,7 +1786,7 @@
 # MAGIC     -- ========================================================
 # MAGIC
 # MAGIC     INNER JOIN
-# MAGIC         retail_analytics.`3_gold`.dim_customer c
+# MAGIC         dim_customer c
 # MAGIC
 # MAGIC         ON f.customer_id = c.customer_id
 # MAGIC
@@ -1908,7 +1923,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_channel_performance
+# MAGIC     vw_channel_performance
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -1987,7 +2002,7 @@
 # MAGIC
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.fact_sales f
+# MAGIC         fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC     GROUP BY
@@ -2120,7 +2135,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_channel_performance
+# MAGIC FROM vw_channel_performance
 # MAGIC ORDER BY channel_sales_rank;
 
 # COMMAND ----------
@@ -2227,7 +2242,7 @@
 # MAGIC
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.fact_sales f
+# MAGIC         fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC     GROUP BY
@@ -2426,7 +2441,7 @@
 # MAGIC
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.fact_sales f
+# MAGIC         fact_sales f
 # MAGIC
 # MAGIC
 # MAGIC     GROUP BY
@@ -2598,7 +2613,7 @@
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC     retail_analytics.`3_gold`.vw_executive_kpis
+# MAGIC     vw_executive_kpis
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -2765,7 +2780,7 @@
 # MAGIC
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.`3_gold`.fact_sales f;
+# MAGIC     fact_sales f;
 
 # COMMAND ----------
 
@@ -2777,7 +2792,7 @@
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.`3_gold`.vw_executive_kpis;
+# MAGIC FROM vw_executive_kpis;
 
 # COMMAND ----------
 
@@ -2826,7 +2841,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_sales_daily
+# MAGIC         vw_sales_daily
 # MAGIC
 # MAGIC
 # MAGIC     UNION ALL
@@ -2852,7 +2867,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_sales_monthly
+# MAGIC         vw_sales_monthly
 # MAGIC
 # MAGIC
 # MAGIC     UNION ALL
@@ -2878,7 +2893,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_product_performance
+# MAGIC         vw_product_performance
 # MAGIC
 # MAGIC
 # MAGIC     UNION ALL
@@ -2904,7 +2919,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_store_performance
+# MAGIC         vw_store_performance
 # MAGIC
 # MAGIC
 # MAGIC     UNION ALL
@@ -2930,7 +2945,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_customer_analysis
+# MAGIC         vw_customer_analysis
 # MAGIC
 # MAGIC
 # MAGIC     UNION ALL
@@ -2956,7 +2971,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_channel_performance
+# MAGIC         vw_channel_performance
 # MAGIC
 # MAGIC
 # MAGIC     UNION ALL
@@ -2985,7 +3000,7 @@
 # MAGIC         END AS status
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.`3_gold`.vw_executive_kpis
+# MAGIC         vw_executive_kpis
 # MAGIC
 # MAGIC )
 # MAGIC

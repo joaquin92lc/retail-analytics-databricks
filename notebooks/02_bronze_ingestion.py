@@ -1,4 +1,29 @@
 # Databricks notebook source
+# COMMAND ----------
+
+# DBTITLE 1,00. CONFIGURACIÓN DEL ENTORNO
+
+# El catálogo se recibe como parámetro desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
+
+dbutils.widgets.text("catalog", "retail_analytics")
+
+CATALOG = dbutils.widgets.get("catalog")
+ENVIRONMENT = (
+    "dev"
+    if CATALOG.endswith("_dev")
+    else "prod"
+)
+
+AUTOLOADER_METADATA_BASE = (
+    f"/Volumes/retail_analytics/0_landing/"
+    f"autoloader_metadata/{ENVIRONMENT}"
+)
+
+print(f"Environment catalog: {CATALOG}")
+print(f"Auto Loader metadata environment: {ENVIRONMENT}")
+
 # DBTITLE 1,01. VALIDACIÓN DE ARCHIVOS SALES EN LA LANDING ZONE
 # ============================================================
 # VALIDACIÓN DE ARCHIVOS SALES EN LA LANDING ZONE
@@ -198,8 +223,7 @@ sales_source_path = (
 # Es metadata técnica utilizada internamente por Auto Loader.
 #
 sales_schema_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/schemas/sales"
+    f"{AUTOLOADER_METADATA_BASE}/schemas/sales"
 )
 
 
@@ -221,8 +245,7 @@ sales_schema_path = (
 # Procesará únicamente el archivo nuevo.
 #
 sales_checkpoint_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/checkpoints/sales"
+    f"{AUTOLOADER_METADATA_BASE}/checkpoints/sales"
 )
 
 
@@ -238,7 +261,7 @@ sales_checkpoint_path = (
 # catalog.schema.table
 #
 bronze_sales_table = (
-    "retail_analytics.1_bronze.sales"
+    f"{CATALOG}.1_bronze.sales"
 )
 
 
@@ -494,6 +517,8 @@ bronze_sales_query = (
     )
 )
 
+bronze_sales_query.awaitTermination()
+
 # COMMAND ----------
 
 # DBTITLE 1,08. VALIDACIÓN DE LA CARGA BRONZE
@@ -503,9 +528,9 @@ bronze_sales_query = (
 
 # Ejecutamos un COUNT sobre la tabla Bronze para comprobar
 # que el número de filas coincide con el origen.
-bronze_count = spark.sql("""
+bronze_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`1_bronze`.sales
+    FROM {CATALOG}.`1_bronze`.sales
 """).collect()[0][0]
 
 print(
@@ -549,8 +574,7 @@ customers_source_path = (
 #
 # Cada fuente debe tener SU PROPIO schemaLocation.
 customers_schema_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/schemas/customers"
+    f"{AUTOLOADER_METADATA_BASE}/schemas/customers"
 )
 
 
@@ -563,8 +587,7 @@ customers_schema_path = (
 # Esto permitirá que, si en el futuro añadimos nuevos archivos
 # de customers, Auto Loader procese solamente los nuevos.
 customers_checkpoint_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/checkpoints/customers"
+    f"{AUTOLOADER_METADATA_BASE}/checkpoints/customers"
 )
 
 
@@ -574,7 +597,7 @@ customers_checkpoint_path = (
 #
 # Usamos backticks porque nuestro schema comienza por número.
 customers_bronze_table = (
-    "`retail_analytics`.`1_bronze`.`customers`"
+    f"`{CATALOG}`.`1_bronze`.`customers`"
 )
 
 
@@ -683,6 +706,8 @@ bronze_customers_query = (
     )
 )
 
+bronze_customers_query.awaitTermination()
+
 # COMMAND ----------
 
 # DBTITLE 1,11. VALIDACIÓN DE LA CARGA CUSTOMERS BRONZE
@@ -691,9 +716,9 @@ bronze_customers_query = (
 # ============================================================
 
 # Contamos los registros almacenados en la tabla Delta Bronze.
-customers_bronze_count = spark.sql("""
+customers_bronze_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`1_bronze`.customers
+    FROM {CATALOG}.`1_bronze`.customers
 """).collect()[0][0]
 
 
@@ -732,8 +757,7 @@ products_source_path = (
 # para gestionar el schema de products.
 #
 products_schema_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/schemas/products"
+    f"{AUTOLOADER_METADATA_BASE}/schemas/products"
 )
 
 
@@ -747,8 +771,7 @@ products_schema_path = (
 # sean incrementales.
 #
 products_checkpoint_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/checkpoints/products"
+    f"{AUTOLOADER_METADATA_BASE}/checkpoints/products"
 )
 
 
@@ -759,7 +782,7 @@ products_checkpoint_path = (
 # Tabla Delta Bronze gestionada por Unity Catalog.
 #
 products_bronze_table = (
-    "`retail_analytics`.`1_bronze`.`products`"
+    f"`{CATALOG}`.`1_bronze`.`products`"
 )
 
 
@@ -856,6 +879,8 @@ bronze_products_query = (
     )
 )
 
+bronze_products_query.awaitTermination()
+
 # COMMAND ----------
 
 # DBTITLE 1,14. VALIDACIÓN DE LA CARGA PRODUCTS BRONZE
@@ -863,9 +888,9 @@ bronze_products_query = (
 # 14. VALIDACIÓN DE LA CARGA PRODUCTS BRONZE
 # ============================================================
 
-products_bronze_count = spark.sql("""
+products_bronze_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`1_bronze`.products
+    FROM {CATALOG}.`1_bronze`.products
 """).collect()[0][0]
 
 print(
@@ -903,8 +928,7 @@ stores_source_path = (
 # Mantenemos una ubicación independiente para cada fuente.
 #
 stores_schema_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/schemas/stores"
+    f"{AUTOLOADER_METADATA_BASE}/schemas/stores"
 )
 
 
@@ -919,8 +943,7 @@ stores_schema_path = (
 # sabrá qué archivos ya ha procesado.
 #
 stores_checkpoint_path = (
-    "/Volumes/retail_analytics/0_landing/"
-    "autoloader_metadata/checkpoints/stores"
+    f"{AUTOLOADER_METADATA_BASE}/checkpoints/stores"
 )
 
 
@@ -935,7 +958,7 @@ stores_checkpoint_path = (
 #           └── stores
 #
 stores_bronze_table = (
-    "`retail_analytics`.`1_bronze`.`stores`"
+    f"`{CATALOG}`.`1_bronze`.`stores`"
 )
 
 
@@ -1051,6 +1074,8 @@ bronze_stores_query = (
     )
 )
 
+bronze_stores_query.awaitTermination()
+
 # COMMAND ----------
 
 # DBTITLE 1,17. VALIDACIÓN DE LA CARGA STORES BRONZE
@@ -1062,9 +1087,9 @@ bronze_stores_query = (
 # Delta para comprobar que no hemos perdido registros
 # durante la ingestión.
 
-stores_bronze_count = spark.sql("""
+stores_bronze_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`1_bronze`.stores
+    FROM {CATALOG}.`1_bronze`.stores
 """).collect()[0][0]
 
 
@@ -1137,7 +1162,7 @@ print("=" * 75)
 for table_name in bronze_tables:
 
     full_table_name = (
-        f"retail_analytics.`1_bronze`.{table_name}"
+        f"{CATALOG}.`1_bronze`.{table_name}"
     )
 
 
@@ -1282,7 +1307,7 @@ for table_name in bronze_tables:
 
     # Construimos el nombre completo de la tabla.
     full_table_name = (
-        f"retail_analytics.`1_bronze`.{table_name}"
+        f"{CATALOG}.`1_bronze`.{table_name}"
     )
 
     # --------------------------------------------------------

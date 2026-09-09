@@ -1,4 +1,15 @@
 # Databricks notebook source
+# COMMAND ----------
+
+# Catálogo recibido desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
+
+dbutils.widgets.text("catalog", "retail_analytics")
+CATALOG = dbutils.widgets.get("catalog")
+
+print(f"Environment catalog: {CATALOG}")
+
 # DBTITLE 1,00. CONFIGURACIÓN Y LECTURA DE TABLAS SILVER
 # ============================================================
 # 00. CONFIGURACIÓN Y LECTURA DE TABLAS SILVER
@@ -70,16 +81,16 @@
 silver_tables = {
 
     "sales":
-        "retail_analytics.2_silver.sales",
+        f"{CATALOG}.2_silver.sales",
 
     "customers":
-        "retail_analytics.2_silver.customers",
+        f"{CATALOG}.2_silver.customers",
 
     "products":
-        "retail_analytics.2_silver.products",
+        f"{CATALOG}.2_silver.products",
 
     "stores":
-        "retail_analytics.2_silver.stores"
+        f"{CATALOG}.2_silver.stores"
 }
 
 
@@ -100,19 +111,19 @@ silver_tables = {
 gold_tables = {
 
     "fact_sales":
-        "retail_analytics.3_gold.fact_sales",
+        f"{CATALOG}.3_gold.fact_sales",
 
     "dim_customer":
-        "retail_analytics.3_gold.dim_customer",
+        f"{CATALOG}.3_gold.dim_customer",
 
     "dim_product":
-        "retail_analytics.3_gold.dim_product",
+        f"{CATALOG}.3_gold.dim_product",
 
     "dim_store":
-        "retail_analytics.3_gold.dim_store",
+        f"{CATALOG}.3_gold.dim_store",
 
     "dim_date":
-        "retail_analytics.3_gold.dim_date"
+        f"{CATALOG}.3_gold.dim_date"
 }
 
 
@@ -1159,7 +1170,7 @@ print(
 # ============================================================
 
 dim_date_table = (
-    "retail_analytics.3_gold.dim_date"
+    f"{CATALOG}.3_gold.dim_date"
 )
 
 
@@ -1189,9 +1200,9 @@ dim_date_table = (
 # 02.05 VALIDACIÓN DE DIM_DATE MATERIALIZADA
 # ============================================================
 
-dim_date_gold_count = spark.sql("""
+dim_date_gold_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`3_gold`.dim_date
+    FROM {CATALOG}.`3_gold`.dim_date
 """).collect()[0][0]
 
 
@@ -1403,7 +1414,7 @@ for rule, errors in dim_customer_validation.items():
 # ============================================================
 
 dim_customer_table = (
-    "retail_analytics.3_gold.dim_customer"
+    f"{CATALOG}.3_gold.dim_customer"
 )
 
 
@@ -1433,9 +1444,9 @@ dim_customer_table = (
 # 03.04 VALIDACIÓN DE DIM_CUSTOMER MATERIALIZADA
 # ============================================================
 
-dim_customer_gold_count = spark.sql("""
+dim_customer_gold_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`3_gold`.dim_customer
+    FROM {CATALOG}.`3_gold`.dim_customer
 """).collect()[0][0]
 
 
@@ -1652,7 +1663,7 @@ for rule, errors in dim_product_validation.items():
 # ============================================================
 
 dim_product_table = (
-    "retail_analytics.3_gold.dim_product"
+    f"{CATALOG}.3_gold.dim_product"
 )
 
 
@@ -1682,9 +1693,9 @@ dim_product_table = (
 # 04.04 VALIDACIÓN DE DIM_PRODUCT MATERIALIZADA
 # ============================================================
 
-dim_product_gold_count = spark.sql("""
+dim_product_gold_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`3_gold`.dim_product
+    FROM {CATALOG}.`3_gold`.dim_product
 """).collect()[0][0]
 
 
@@ -1896,7 +1907,7 @@ for rule, errors in dim_store_validation.items():
 # ============================================================
 
 dim_store_table = (
-    "retail_analytics.3_gold.dim_store"
+    f"{CATALOG}.3_gold.dim_store"
 )
 
 
@@ -1926,9 +1937,9 @@ dim_store_table = (
 # 05.04 VALIDACIÓN DE DIM_STORE MATERIALIZADA
 # ============================================================
 
-dim_store_gold_count = spark.sql("""
+dim_store_gold_count = spark.sql(f"""
     SELECT COUNT(*)
-    FROM retail_analytics.`3_gold`.dim_store
+    FROM {CATALOG}.`3_gold`.dim_store
 """).collect()[0][0]
 
 
@@ -1987,7 +1998,7 @@ from pyspark.sql import functions as F
 # ------------------------------------------------------------
 
 fact_sales_table = (
-    "retail_analytics.3_gold.fact_sales"
+    f"{CATALOG}.3_gold.fact_sales"
 )
 
 
@@ -2654,22 +2665,22 @@ from pyspark.sql import functions as F
 # ------------------------------------------------------------
 
 dim_date_materialized_df = spark.table(
-    "retail_analytics.3_gold.dim_date"
+    f"{CATALOG}.3_gold.dim_date"
 )
 
 
 dim_customer_materialized_df = spark.table(
-    "retail_analytics.3_gold.dim_customer"
+    f"{CATALOG}.3_gold.dim_customer"
 )
 
 
 dim_product_materialized_df = spark.table(
-    "retail_analytics.3_gold.dim_product"
+    f"{CATALOG}.3_gold.dim_product"
 )
 
 
 dim_store_materialized_df = spark.table(
-    "retail_analytics.3_gold.dim_store"
+    f"{CATALOG}.3_gold.dim_store"
 )
 
 
@@ -2852,9 +2863,17 @@ from delta.tables import DeltaTable
 # ------------------------------------------------------------
 
 fact_sales_table = (
-    "retail_analytics.3_gold.fact_sales"
+    f"{CATALOG}.3_gold.fact_sales"
 )
 
+# Comprobamos si fact_sales ya existe en Gold.
+fact_sales_exists = spark.catalog.tableExists(
+    fact_sales_table
+)
+
+print(
+    f"Tabla FACT_SALES existente: {fact_sales_exists}"
+)
 
 # ------------------------------------------------------------
 # SOLO HACEMOS MERGE SI EXISTE UN BATCH NUEVO
@@ -2862,51 +2881,64 @@ fact_sales_table = (
 
 if gold_incremental_rows > 0:
 
-    # Recuperamos fact_sales como objeto DeltaTable.
+    # ========================================================
+    # CARGA INICIAL
+    # ========================================================
 
-    fact_sales_delta = DeltaTable.forName(
-        spark,
-        fact_sales_table
-    )
+    if not fact_sales_exists:
 
-
-    # --------------------------------------------------------
-    # MERGE INCREMENTAL
-    # --------------------------------------------------------
-
-    (
-        fact_sales_delta.alias(
-            "target"
+        (
+            fact_sales_df
+            .write
+            .format("delta")
+            .mode("overwrite")
+            .option(
+                "overwriteSchema",
+                "true"
+            )
+            .saveAsTable(
+                fact_sales_table
+            )
         )
 
-        .merge(
-
-            fact_sales_df.alias(
-                "source"
-            ),
-
-            """
-            target.sale_id = source.sale_id
-            AND
-            target.line_id = source.line_id
-            """
+        print(
+            "OK | Carga inicial de FACT_SALES completada:",
+            gold_incremental_rows
         )
 
-        # Al tratarse de un modelo append-only, únicamente
-        # necesitamos insertar las claves que no existían.
+    # ========================================================
+    # CARGA INCREMENTAL
+    # ========================================================
 
-        .whenNotMatchedInsertAll()
+    else:
 
-        .execute()
-    )
+        fact_sales_delta = DeltaTable.forName(
+            spark,
+            fact_sales_table
+        )
 
+        (
+            fact_sales_delta
+            .alias("target")
 
-    print(
-        "OK | Registros nuevos incorporados a fact_sales:",
-        gold_incremental_rows
-    )
+            .merge(
+                fact_sales_df.alias("source"),
+                """
+                target.sale_id = source.sale_id
+                AND
+                target.line_id = source.line_id
+                """
+            )
 
+            .whenNotMatchedInsertAll()
 
+            .execute()
+        )
+
+        print(
+            "OK | Registros nuevos incorporados a fact_sales:",
+            gold_incremental_rows
+        )
 else:
 
     # Evitamos lanzar un MERGE completamente innecesario
@@ -2960,19 +2992,19 @@ from pyspark.sql import functions as F
 gold_tables_validation = {
 
     "dim_date":
-        "retail_analytics.3_gold.dim_date",
+        f"{CATALOG}.3_gold.dim_date",
 
     "dim_customer":
-        "retail_analytics.3_gold.dim_customer",
+        f"{CATALOG}.3_gold.dim_customer",
 
     "dim_product":
-        "retail_analytics.3_gold.dim_product",
+        f"{CATALOG}.3_gold.dim_product",
 
     "dim_store":
-        "retail_analytics.3_gold.dim_store",
+        f"{CATALOG}.3_gold.dim_store",
 
     "fact_sales":
-        "retail_analytics.3_gold.fact_sales"
+        f"{CATALOG}.3_gold.fact_sales"
 }
 
 
@@ -3352,23 +3384,23 @@ from pyspark.sql import functions as F
 # ------------------------------------------------------------
 
 dim_date_gold_df = spark.table(
-    "retail_analytics.3_gold.dim_date"
+    f"{CATALOG}.3_gold.dim_date"
 )
 
 dim_customer_gold_df = spark.table(
-    "retail_analytics.3_gold.dim_customer"
+    f"{CATALOG}.3_gold.dim_customer"
 )
 
 dim_product_gold_df = spark.table(
-    "retail_analytics.3_gold.dim_product"
+    f"{CATALOG}.3_gold.dim_product"
 )
 
 dim_store_gold_df = spark.table(
-    "retail_analytics.3_gold.dim_store"
+    f"{CATALOG}.3_gold.dim_store"
 )
 
 fact_sales_gold_df = spark.table(
-    "retail_analytics.3_gold.fact_sales"
+    f"{CATALOG}.3_gold.fact_sales"
 )
 
 

@@ -88,6 +88,21 @@
 
 # COMMAND ----------
 
+# Catálogo recibido desde Databricks Asset Bundles.
+# DEV  -> retail_analytics_dev
+# PROD -> retail_analytics
+
+dbutils.widgets.text("catalog", "retail_analytics")
+CATALOG = dbutils.widgets.get("catalog")
+
+spark.sql(f"USE CATALOG `{CATALOG}`")
+spark.sql("USE SCHEMA `5_ml`")
+
+print(f"Environment catalog: {CATALOG}")
+print("Environment schema: 5_ml")
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## 00.01 CONFIGURACIÓN DE FUENTES DE MONITORING
 # MAGIC
@@ -145,27 +160,27 @@ from pyspark.sql import functions as F
 # ============================================================
 
 FACT_SALES_TABLE = (
-    "retail_analytics.3_gold.fact_sales"
+    f"{CATALOG}.3_gold.fact_sales"
 )
 
 
 DIM_DATE_TABLE = (
-    "retail_analytics.3_gold.dim_date"
+    f"{CATALOG}.3_gold.dim_date"
 )
 
 
 DIM_STORE_TABLE = (
-    "retail_analytics.3_gold.dim_store"
+    f"{CATALOG}.3_gold.dim_store"
 )
 
 
 FORECAST_TABLE = (
-    "retail_analytics.5_ml.sales_forecast_predictions"
+    f"{CATALOG}.5_ml.sales_forecast_predictions"
 )
 
 
 FEATURE_TABLE = (
-    "retail_analytics.5_ml.daily_store_features"
+    f"{CATALOG}.5_ml.daily_store_features"
 )
 
 
@@ -2047,7 +2062,7 @@ actuals_available = (
     int(
         evaluation_status[
             "null_actuals"
-        ]
+        ] or 0
     )
 
 )
@@ -5910,12 +5925,12 @@ from pyspark.sql import functions as F
 # ============================================================
 
 MONITORING_RUNS_TABLE = (
-    "retail_analytics.5_ml.ml_monitoring_runs"
+    f"{CATALOG}.5_ml.ml_monitoring_runs"
 )
 
 
 FEATURE_DRIFT_MONITORING_TABLE = (
-    "retail_analytics.5_ml.feature_drift_monitoring"
+    f"{CATALOG}.5_ml.feature_drift_monitoring"
 )
 
 
@@ -7593,12 +7608,12 @@ from pyspark.sql import functions as F
 # ============================================================
 
 MONITORING_RUNS_TABLE = (
-    "retail_analytics.5_ml.ml_monitoring_runs"
+    f"{CATALOG}.5_ml.ml_monitoring_runs"
 )
 
 
 FEATURE_DRIFT_MONITORING_TABLE = (
-    "retail_analytics.5_ml.feature_drift_monitoring"
+    f"{CATALOG}.5_ml.feature_drift_monitoring"
 )
 
 
@@ -8470,7 +8485,7 @@ print("=" * 80)
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC retail_analytics.5_ml.vw_ml_monitoring_overview
+# MAGIC vw_ml_monitoring_overview
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -8521,7 +8536,7 @@ print("=" * 80)
 # MAGIC
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.5_ml.ml_monitoring_runs;
+# MAGIC     ml_monitoring_runs;
 
 # COMMAND ----------
 
@@ -8533,7 +8548,7 @@ print("=" * 80)
 # MAGIC -- ============================================================
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.5_ml.vw_ml_monitoring_overview
+# MAGIC FROM vw_ml_monitoring_overview
 # MAGIC ORDER BY monitoring_timestamp DESC;
 
 # COMMAND ----------
@@ -8561,7 +8576,7 @@ print("=" * 80)
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC retail_analytics.5_ml.vw_feature_drift_history
+# MAGIC vw_feature_drift_history
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -8658,7 +8673,7 @@ print("=" * 80)
 # MAGIC
 # MAGIC
 # MAGIC FROM
-# MAGIC     retail_analytics.5_ml.feature_drift_monitoring;
+# MAGIC     feature_drift_monitoring;
 
 # COMMAND ----------
 
@@ -8666,7 +8681,7 @@ print("=" * 80)
 # MAGIC %sql
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.5_ml.vw_feature_drift_history
+# MAGIC FROM vw_feature_drift_history
 # MAGIC ORDER BY current_end_date DESC, psi DESC;
 
 # COMMAND ----------
@@ -8708,7 +8723,7 @@ print("=" * 80)
 # MAGIC
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW
-# MAGIC retail_analytics.5_ml.vw_forecast_monitoring
+# MAGIC vw_forecast_monitoring
 # MAGIC AS
 # MAGIC
 # MAGIC
@@ -8729,10 +8744,10 @@ print("=" * 80)
 # MAGIC         ) AS actual_net_sales
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.3_gold.fact_sales f
+# MAGIC         `3_gold`.fact_sales f
 # MAGIC
 # MAGIC     INNER JOIN
-# MAGIC         retail_analytics.3_gold.dim_date d
+# MAGIC         `3_gold`.dim_date d
 # MAGIC
 # MAGIC         ON
 # MAGIC             f.date_key = d.date_key
@@ -8758,10 +8773,10 @@ print("=" * 80)
 # MAGIC         ) AS max_gold_date
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.3_gold.fact_sales f
+# MAGIC         `3_gold`.fact_sales f
 # MAGIC
 # MAGIC     INNER JOIN
-# MAGIC         retail_analytics.3_gold.dim_date d
+# MAGIC         `3_gold`.dim_date d
 # MAGIC
 # MAGIC         ON
 # MAGIC             f.date_key = d.date_key
@@ -8843,7 +8858,7 @@ print("=" * 80)
 # MAGIC
 # MAGIC
 # MAGIC     FROM
-# MAGIC         retail_analytics.5_ml.sales_forecast_predictions p
+# MAGIC         sales_forecast_predictions p
 # MAGIC
 # MAGIC
 # MAGIC     CROSS JOIN
@@ -8986,5 +9001,5 @@ print("=" * 80)
 # MAGIC %sql
 # MAGIC
 # MAGIC SELECT *
-# MAGIC FROM retail_analytics.5_ml.vw_forecast_monitoring
+# MAGIC FROM vw_forecast_monitoring
 # MAGIC ORDER BY forecast_date DESC, store_id;
